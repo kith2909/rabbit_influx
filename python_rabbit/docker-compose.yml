@@ -1,0 +1,49 @@
+version: '3'
+services:
+  rabbitmq:
+    image: rabbitmq
+    networks:
+      - wiki-network
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  producer:
+    build:
+      context: ./producer
+    depends_on:
+      - rabbitmq
+    networks:
+      - wiki-network
+
+  consumer:
+    build:
+      context: ./consumer
+    depends_on:
+      - rabbitmq
+      - influxdb
+    networks:
+      - wiki-network
+
+  influxdb:
+    image: influxdb
+    networks:
+      - wiki-network
+    ports:
+      - "8086:8086"
+    environment:
+      INFLUXDB_DB: mydb
+      INFLUXDB_ADMIN_USER: admin
+      INFLUXDB_ADMIN_PASSWORD: admin
+    volumes:
+      - influxdb_data:/var/lib/influxdb
+
+networks:
+  wiki-network:
+    driver: bridge
+
+volumes:
+  influxdb_data:
